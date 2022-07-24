@@ -12,6 +12,7 @@ class OpenStreetMapSearchAndPick extends StatefulWidget {
   final void Function(PickedData pickedData) onPicked;
   Color buttonColor;
   String buttonText;
+
   OpenStreetMapSearchAndPick({
     Key? key,
     required this.center,
@@ -111,192 +112,219 @@ class _OpenStreetMapSearchAndPickState
 
   @override
   Widget build(BuildContext context) {
-    OutlineInputBorder inputBorder = OutlineInputBorder(
-      borderSide: BorderSide(color: Theme.of(context).primaryColor),
+    OutlineInputBorder inputBorder = const OutlineInputBorder(
+      borderRadius: BorderRadius.all(
+        Radius.circular(12),
+      ),
+      borderSide: BorderSide(
+        color: Colors.black12,
+      ),
     );
     OutlineInputBorder inputFocusBorder = OutlineInputBorder(
-      borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 3.0),
+      borderRadius: const BorderRadius.all(
+        Radius.circular(12),
+      ),
+      borderSide:
+          BorderSide(color: Theme.of(context).primaryColor.withOpacity(0.4)),
     );
 
     // String? _autocompleteSelection;
-    return SafeArea(
-      child: Stack(
-        children: [
-          Positioned.fill(
-              child: FlutterMap(
-            options: MapOptions(
-                center: LatLng(widget.center.latitude, widget.center.longitude),
-                zoom: 15.0,
-                maxZoom: 18,
-                minZoom: 6),
-            mapController: _mapController,
-            layers: [
-              TileLayerOptions(
-                urlTemplate:
-                    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                subdomains: ['a', 'b', 'c'],
-                // attributionBuilder: (_) {
-                //   return Text("© OpenStreetMap contributors");
-                // },
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Mapa"),
+        actions: [
+          IconButton(
+              onPressed: () {
+                _mapController.move(
+                    LatLng(widget.center.latitude, widget.center.longitude),
+                    _mapController.zoom);
+              },
+              icon: const Icon(Icons.my_location))
+        ],
+      ),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Positioned.fill(
+                child: FlutterMap(
+              options: MapOptions(
+                  center:
+                      LatLng(widget.center.latitude, widget.center.longitude),
+                  zoom: 15.0,
+                  maxZoom: 18,
+                  minZoom: 6),
+              mapController: _mapController,
+              layers: [
+                TileLayerOptions(
+                  urlTemplate:
+                      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  subdomains: ['a', 'b', 'c'],
+                  // attributionBuilder: (_) {
+                  //   return Text("© OpenStreetMap contributors");
+                  // },
+                ),
+              ],
+            )),
+            Positioned.fill(
+                child: IgnorePointer(
+              child: Center(
+                child: Icon(
+                  Icons.location_pin,
+                  size: 50,
+                  color: widget.buttonColor,
+                ),
               ),
-            ],
-          )),
-          Positioned(
-              top: MediaQuery.of(context).size.height * 0.5,
+            )),
+            Positioned(
+                bottom: 140,
+                right: 12,
+                child: FloatingActionButton(
+                  mini: true,
+                  backgroundColor: Theme.of(context).primaryColor,
+                  onPressed: () {
+                    _mapController.move(
+                        _mapController.center, _mapController.zoom + 1);
+                  },
+                  child: const Icon(Icons.zoom_in),
+                )),
+            Positioned(
+                bottom: 80,
+                right: 12,
+                child: FloatingActionButton(
+                  mini: true,
+                  backgroundColor: Theme.of(context).primaryColor,
+                  onPressed: () {
+                    _mapController.move(
+                        _mapController.center, _mapController.zoom - 1);
+                  },
+                  child: const Icon(
+                    Icons.zoom_out,
+                  ),
+                )),
+            Positioned(
+              top: 0,
               left: 0,
               right: 0,
-              child: IgnorePointer(
-                child: Center(
-                  child: StatefulBuilder(builder: (context, setState) {
-                    return Text(
-                      _searchController.text,
-                      textAlign: TextAlign.center,
-                    );
-                  }),
+              child: Container(
+                margin: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              )),
-          const Positioned.fill(
-              child: IgnorePointer(
-            child: Center(
-              child: Icon(
-                Icons.location_pin,
-                size: 50,
-              ),
-            ),
-          )),
-          Positioned(
-              bottom: 180,
-              right: 5,
-              child: FloatingActionButton(
-                backgroundColor: Theme.of(context).primaryColor,
-                onPressed: () {
-                  _mapController.move(
-                      _mapController.center, _mapController.zoom + 1);
-                },
-                child: const Icon(Icons.zoom_in_map),
-              )),
-          Positioned(
-              bottom: 120,
-              right: 5,
-              child: FloatingActionButton(
-                backgroundColor: Theme.of(context).primaryColor,
-                onPressed: () {
-                  _mapController.move(
-                      _mapController.center, _mapController.zoom - 1);
-                },
-                child: const Icon(Icons.zoom_out_map),
-              )),
-          Positioned(
-              bottom: 60,
-              right: 5,
-              child: FloatingActionButton(
-                backgroundColor: Theme.of(context).primaryColor,
-                onPressed: () {
-                  _mapController.move(
-                      LatLng(widget.center.latitude, widget.center.longitude),
-                      _mapController.zoom);
-                },
-                child: Icon(Icons.my_location),
-              )),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              margin: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(5),
-              ),
-              child: Column(
-                children: [
-                  TextFormField(
-                      controller: _searchController,
-                      focusNode: _focusNode,
-                      decoration: InputDecoration(
-                        hintText: 'Search Location',
-                        border: inputBorder,
-                        focusedBorder: inputFocusBorder,
-                      ),
-                      onChanged: (String value) {
-                        if (_debounce?.isActive ?? false) _debounce?.cancel();
+                child: Column(
+                  children: [
+                    TextFormField(
+                        controller: _searchController,
+                        focusNode: _focusNode,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 18,
+                          ),
+                          hintText: 'Buscar dirección',
+                          focusedBorder: inputFocusBorder,
+                          enabledBorder: inputBorder,
+                          prefixIcon: Padding(
+                            padding: const EdgeInsets.only(left: 5),
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.search_rounded,
+                                color: Colors.grey,
+                                size: 18,
+                              ),
+                              onPressed: () {},
+                            ),
+                          ),
+                          border: InputBorder.none,
+                          suffixIcon: IconButton(
+                            onPressed: _searchController.clear,
+                            icon: const Icon(
+                              Icons.clear,
+                              color: Colors.grey,
+                              size: 18,
+                            ),
+                          ),
+                        ),
+                        onChanged: (String value) {
+                          if (_debounce?.isActive ?? false) _debounce?.cancel();
 
-                        _debounce =
-                            Timer(const Duration(milliseconds: 2000), () async {
-                          if (kDebugMode) {
-                            print(value);
-                          }
-                          var client = http.Client();
-                          try {
-                            String url =
-                                'https://nominatim.openstreetmap.org/search?q=$value&format=json&polygon_geojson=1&addressdetails=1';
+                          _debounce = Timer(const Duration(milliseconds: 2000),
+                              () async {
                             if (kDebugMode) {
-                              print(url);
+                              print(value);
                             }
-                            var response = await client.post(Uri.parse(url));
-                            var decodedResponse =
-                                jsonDecode(utf8.decode(response.bodyBytes))
-                                    as List<dynamic>;
-                            if (kDebugMode) {
-                              print(decodedResponse);
-                            }
-                            _options = decodedResponse
-                                .map((e) => OSMdata(
-                                    displayname: e['display_name'],
-                                    lat: double.parse(e['lat']),
-                                    lon: double.parse(e['lon'])))
-                                .toList();
-                            setState(() {});
-                          } finally {
-                            client.close();
-                          }
-
-                          setState(() {});
-                        });
-                      }),
-                  StatefulBuilder(builder: ((context, setState) {
-                    return ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _options.length > 5 ? 5 : _options.length,
-                        itemBuilder: (context, index) {
-                          return ListTile(
-                            title: Text(_options[index].displayname),
-                            subtitle: Text(
-                                '${_options[index].lat},${_options[index].lon}'),
-                            onTap: () {
-                              _mapController.move(
-                                  LatLng(
-                                      _options[index].lat, _options[index].lon),
-                                  15.0);
-
-                              _focusNode.unfocus();
-                              _options.clear();
+                            var client = http.Client();
+                            try {
+                              String url =
+                                  'https://nominatim.openstreetmap.org/search?q=$value&format=json&polygon_geojson=1&addressdetails=1';
+                              if (kDebugMode) {
+                                print(url);
+                              }
+                              var response = await client.post(Uri.parse(url));
+                              var decodedResponse =
+                                  jsonDecode(utf8.decode(response.bodyBytes))
+                                      as List<dynamic>;
+                              if (kDebugMode) {
+                                print(decodedResponse);
+                              }
+                              _options = decodedResponse
+                                  .map((e) => OSMdata(
+                                      displayname: e['display_name'],
+                                      lat: double.parse(e['lat']),
+                                      lon: double.parse(e['lon'])))
+                                  .toList();
                               setState(() {});
-                            },
-                          );
-                        });
-                  })),
-                ],
+                            } finally {
+                              client.close();
+                            }
+
+                            setState(() {});
+                          });
+                        }),
+                    StatefulBuilder(builder: ((context, setState) {
+                      return ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _options.length > 5 ? 5 : _options.length,
+                          itemBuilder: (context, index) {
+                            return ListTile(
+                              title: Text(_options[index].displayname),
+                              subtitle: Text(
+                                  '${_options[index].lat},${_options[index].lon}'),
+                              onTap: () {
+                                _mapController.move(
+                                    LatLng(_options[index].lat,
+                                        _options[index].lon),
+                                    15.0);
+
+                                _focusNode.unfocus();
+                                _options.clear();
+                                setState(() {});
+                              },
+                            );
+                          });
+                    })),
+                  ],
+                ),
               ),
             ),
-          ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: WideButton(widget.buttonText, onPressed: () async {
-                  pickData().then((value) {
-                    widget.onPicked(value);
-                  });
-                }, backgroundcolor: widget.buttonColor),
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: WideButton(widget.buttonText, onPressed: () async {
+                    pickData().then((value) {
+                      widget.onPicked(value);
+                    });
+                  }, backgroundcolor: widget.buttonColor),
+                ),
               ),
-            ),
-          )
-        ],
+            )
+          ],
+        ),
       ),
     );
   }
@@ -320,7 +348,9 @@ class OSMdata {
   final String displayname;
   final double lat;
   final double lon;
+
   OSMdata({required this.displayname, required this.lat, required this.lon});
+
   @override
   String toString() {
     return '$displayname, $lat, $lon';
@@ -341,6 +371,7 @@ class OSMdata {
 class LatLong {
   final double latitude;
   final double longitude;
+
   LatLong(this.latitude, this.longitude);
 }
 

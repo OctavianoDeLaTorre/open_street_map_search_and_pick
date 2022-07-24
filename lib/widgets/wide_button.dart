@@ -27,9 +27,9 @@ class WideButton extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: padding),
         child: ElevatedButton(
-          style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.all(backgroundcolor),
-          ),
+          style: ElevatedButton.styleFrom(shape: new RoundedRectangleBorder(
+            borderRadius: new BorderRadius.circular(12.0),
+          ),),
           onPressed: onPressed,
           child: Text(text),
         ),
